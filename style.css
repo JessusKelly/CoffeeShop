@@ -8,21 +8,35 @@ header {
     font-family: inherit;
     padding: 8px 15px;
     border-radius: 6px;
-    border: 1px solid #ddd;
+    border: 1px solid #b9b9b9;
     margin-left: 14px;
 }
 
-.navigation {
+.navigation,
+button {
     padding: 8px 5px;
     border-radius: 6px;
-    border: 1px solid #ddd;
+    border: 1px solid #b9b9b9;
 }
 
 #date {
-    border: 1px solid #ddd;
+    border: 1px solid #b9b9b9;
     font-family: inherit;
     font-size: 15px;
     padding: 8px 16px;
+    border-radius: 6px;
+}
+
+.controls {
+    border: 1px solid #ddd;
+    padding: 8px;
+    background-color: #eee;
+    border-radius: 6px;
+}
+
+select {
+    border: 1px solid #b9b9b9;
+    padding: 8px;
     border-radius: 6px;
 }
 
