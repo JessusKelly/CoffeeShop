@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoffeeShop</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="workers.js"></script>
+    <script src="script.js"></script>
+</head>
+
+<body>
+    <header>
+        <button class="navigation">&larr;</button>
+        <div id="date"></div>
+        <button class="navigation">&rarr;</button>
+        <button id="today">Сегодня</button>
+    </header>
+
+    <main>
+        <h3>Управление сменами</h3>
+        <div class="controls">
+            <select id="nameInput"></select>
+            с <select id="timeStart">
+                <option value="8">08:00</option>
+                <option value="12">12:00</option>
+                <option value="15">15:00</option>
+            </select>
+            до <select id="timeEnd">
+                <option value="15">15:00</option>
+                <option value="18">18:00</option>
+                <option value="22">22:00</option>
+
+            </select>
+
+            <button onclick="addShift()">Добавить</button>
+        </div>
+
+        <!-- Контейнер для шкал -->
+        <div id="timelineContainer"></div>
+    </main>
+</body>
+
+</html>
