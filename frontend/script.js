@@ -1,4 +1,4 @@
-const API_URL = 'https://coffeeshop-api-s8ft.onrender.com';
+const API_URL = 'https://coffeeshop-api-s8ft.onrender.com/api';
 document.addEventListener('DOMContentLoaded', async () => {
   const dateElement = document.getElementById('date');
   if (dateElement) {
@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const container = document.getElementById('timelineContainer');
   const nameSelect = document.getElementById('nameInput');
-
   const timeMarks = document.createElement('div');
   timeMarks.className = 'time';
   for (let h = 8; h <= 22; h++) {
@@ -19,14 +18,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     timeMarks.appendChild(mark);
   }
   container.appendChild(timeMarks);
+
   try {
     const res = await fetch(`${API_URL}/employees`);
     if (!res.ok) throw new Error('Ошибка загрузки сотрудников');
     const employees = await res.json();
+
     window.userAddressMap = {};
 
     employees.forEach(person => {
-      window.userAddressMap[String(person.id)] = person.user_address_id;
+      window.userAddressMap[person.id] = person.user_address_id;
 
       nameSelect.add(new Option(`${person.surname} ${person.name}`, person.id));
 
@@ -49,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     container.innerHTML += '<p style="color:red; padding:20px;">Не удалось загрузить данные с сервера. Убедитесь, что бэкенд запущен.</p>';
   }
 });
-
+// ЗАГРУЗКА СМЕН ИЗ БАЗЫ
 async function loadShifts() {
   try {
     const res = await fetch(`${API_URL}/shifts`);
@@ -67,7 +68,7 @@ async function loadShifts() {
     console.error('Ошибка при загрузке смен:', error);
   }
 }
-
+// ОТРИСОВКА ОДНОЙ СМЕНЫ
 function drawShift(shift) {
   const timeline = document.getElementById(`timeline-${shift.user_id}`);
   if (!timeline) return;
@@ -94,7 +95,7 @@ function drawShift(shift) {
 
   timeline.appendChild(bar);
 }
-
+// ДОБАВЛЕНИЕ НОВОЙ СМЕНЫ
 async function addShift() {
   const userId = document.getElementById('nameInput').value;
   const start = parseInt(document.getElementById('timeStart').value);
@@ -104,14 +105,18 @@ async function addShift() {
     alert("Ошибка во времени! Конец должен быть позже начала.");
     return;
   }
-  const userAddressId = window.userAddressMap[parseInt(userId)];
+
+  let userAddressId = window.userAddressMap[userId];
+  if (userAddressId === undefined) {
+    userAddressId = window.userAddressMap[Number(userId)];
+  }
+
   if (!userAddressId) {
     alert("Не удалось найти адрес сотрудника");
     return;
   }
 
   const weekDay = getTodayDBFormat();
-
   const startTimeStr = `${start.toString().padStart(2, '0')}:00:00`;
   const endTimeStr = `${end.toString().padStart(2, '0')}:00:00`;
 
@@ -146,6 +151,7 @@ async function addShift() {
     alert('Не удалось сохранить смену: ' + error.message);
   }
 }
+// УДАЛЕНИЕ СМЕНЫ
 async function deleteShift(shiftId, barElement) {
   if (!confirm('Удалить эту смену?')) return;
 
@@ -158,6 +164,7 @@ async function deleteShift(shiftId, barElement) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Ошибка сервера');
     }
+
     barElement.remove();
 
   } catch (error) {
@@ -165,6 +172,7 @@ async function deleteShift(shiftId, barElement) {
     alert('Не удалось удалить смену: ' + error.message);
   }
 }
+
 function getTodayDBFormat() {
   const jsDay = new Date().getDay();
   return jsDay === 0 ? 7 : jsDay;
