@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://coffeeshop-api-s8ft.onrender.com';
 document.addEventListener('DOMContentLoaded', async () => {
   const dateElement = document.getElementById('date');
   if (dateElement) {
