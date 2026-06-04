@@ -15,6 +15,6 @@ app.get('/api/health', (req, res) => {
 });
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(` Сервер запущен на http://localhost:${PORT}`);
-  console.log(`📡 Проверить работу: http://localhost:${PORT}/api/health`);
+  console.log(`Сервер запущен на http://localhost:${PORT}`);
+  console.log(`Проверить работу: http://localhost:${PORT}/api/health`);
 });
