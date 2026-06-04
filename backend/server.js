@@ -6,6 +6,8 @@ app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
 const employeesRoutes = require('./routes/employees');
 app.use('/api/employees', employeesRoutes);
+const shiftsRoutes = require('./routes/shifts');
+app.use('/api/shifts', shiftsRoutes); 
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
