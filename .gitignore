@@ -1,0 +1,23 @@
+# Зависимости Node.js (восстанавливаются командой npm install)
+node_modules/
+
+# Переменные окружения с паролями и секретами
+.env
+.env.local
+.env.production
+
+# Логи
+*.log
+npm-debug.log*
+
+# Временные файлы ОС
+.DS_Store
+Thumbs.db
+
+# Файлы редактора кода
+.vscode/
+.idea/
+
+# Временные файлы
+*.tmp
+*.swp
