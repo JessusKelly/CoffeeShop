@@ -29,6 +29,10 @@ const shiftsRoutes = require('./routes/shifts');
 app.use('/api/shifts', shiftsRoutes);
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
+const datesRoutes = require('./routes/dates');
+app.use('/api/dates', datesRoutes);
+const statsRoutes = require('./routes/stats');
+app.use('/api/stats', statsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ 

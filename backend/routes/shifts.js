@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const authMiddleware = require('../middleware/auth');
+const { checkShiftOverlap } = require('../utils/validation');
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -40,6 +41,10 @@ router.post('/', authMiddleware, async (req, res) => {
       error: 'Не заполнены все обязательные поля' 
     });
   }
+  const hasOverlap = await checkShiftOverlap(user_address_id, week_day, start_time, end_time);
+    if (hasOverlap) {
+        return res.status(400).json({ error: 'У сотрудника уже есть смена в это время' });
+    }
   try {
     const result = await pool.query(`
       INSERT INTO schedule (user_address_id, week_day, start_time, end_time)
@@ -74,6 +79,43 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         console.error('Ошибка при удалении смены:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+router.put('/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 1) {
+    return res.status(403).json({ error: 'Только администраторы могут редактировать смены' });
+  }
+  
+  const { id } = req.params;
+  const { user_address_id, week_day, start_time, end_time } = req.body;
+
+  if (!user_address_id || !week_day || !start_time || !end_time) {
+    return res.status(400).json({ error: 'Не заполнены все обязательные поля' });
+  }
+    const hasOverlap = await checkShiftOverlap(user_address_id, week_day, start_time, end_time, id);
+    if (hasOverlap) {
+        return res.status(400).json({ error: 'У сотрудника уже есть смена в это время' });
+    }
+  try {
+    const result = await pool.query(`
+      UPDATE schedule 
+      SET user_address_id = $1, 
+          week_day = $2, 
+          start_time = $3, 
+          end_time = $4
+      WHERE id = $5
+      RETURNING *
+    `, [user_address_id, week_day, start_time, end_time, id]);
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Смена не найдена' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Ошибка при редактировании смены:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;
