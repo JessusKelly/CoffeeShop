@@ -143,13 +143,22 @@ function drawShift(shift) {
   bar.innerText = `${start}:00-${end}:00`;
   bar.dataset.shiftId = shift.id;
 
-  bar.onclick = function () {
+    // Обычный клик — редактирование (для админа) или просмотр (для сотрудника)
+    bar.onclick = function () {
     if (user && user.role === 1) {
-      editShift(shift, this);
+        editShift(shift, this);
     } else {
-      alert(`Смена: ${shift.surname} ${shift.name}\nВремя: ${shift.start_time} - ${shift.end_time}\nАдрес: ${shift.address}`);
+        alert(`Смена: ${shift.surname} ${shift.name}\nВремя: ${shift.start_time} - ${shift.end_time}\nАдрес: ${shift.address}`);
     }
-  };
+    };
+
+    // Двойной клик — удаление (только для админа)
+    bar.ondblclick = function (e) {
+    e.preventDefault(); // Предотвращаем выделение текста
+    if (user && user.role === 1) {
+        deleteShift(shift.id, this);
+    }
+    };
 
   timeline.appendChild(bar);
 }
