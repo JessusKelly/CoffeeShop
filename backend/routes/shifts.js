@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const authMiddleware = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -31,14 +32,14 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   const { user_address_id, week_day, start_time, end_time } = req.body;
+  if (req.user.role !== 1) return res.status(403).json({ error: 'Только администраторы могут добавлять смены' });
   if (!user_address_id || !week_day || !start_time || !end_time) {
     return res.status(400).json({ 
       error: 'Не заполнены все обязательные поля' 
     });
   }
-
   try {
     const result = await pool.query(`
       INSERT INTO schedule (user_address_id, week_day, start_time, end_time)
@@ -53,24 +54,26 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const result = await pool.query(
-      'DELETE FROM schedule WHERE id = $1 RETURNING *', 
-      [id]
-    );
-    
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Смена не найдена' });
+router.delete('/:id', authMiddleware, async (req, res) => {
+    if (req.user.role !== 1) {
+        return res.status(403).json({ error: 'У вас нет прав на удаление смен' });
     }
-    
-    res.json({ success: true, deleted: result.rows[0] });
-  } catch (error) {
-    console.error('Ошибка при удалении смены:', error);
-    res.status(500).json({ error: error.message });
-  }
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'DELETE FROM schedule WHERE id = $1 RETURNING *', 
+            [id]
+        );
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Смена не найдена' });
+        }
+        
+        res.json({ success: true, deleted: result.rows[0] });
+    } catch (error) {
+        console.error('Ошибка при удалении смены:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 module.exports = router;

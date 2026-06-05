@@ -2,12 +2,34 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+const allowedOrigins = [
+  'http://localhost:5500',
+  'http://127.0.0.1:5500',
+  'https://coffeeshop-peach-five.vercel.app'
+];
+
+app.use(cors({ 
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 const employeesRoutes = require('./routes/employees');
 app.use('/api/employees', employeesRoutes);
 const shiftsRoutes = require('./routes/shifts');
 app.use('/api/shifts', shiftsRoutes);
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
@@ -17,5 +39,5 @@ app.get('/api/health', (req, res) => {
 });
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
+  console.log(`Сервер запущен на http://localhost:${PORT}`);
 });

@@ -1,3 +1,13 @@
+// ПРОВЕРКА АВТОРИЗАЦИИ
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user'));
+if (!token || !user) {
+    window.location.href = 'login.html';
+}
+function logout() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+}
 const API_URL = 'https://coffeeshop-api-s8ft.onrender.com/api';
 document.addEventListener('DOMContentLoaded', async () => {
   const dateElement = document.getElementById('date');
@@ -20,7 +30,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   container.appendChild(timeMarks);
 
   try {
-    const res = await fetch(`${API_URL}/employees`);
+    const res = await fetch(`${API_URL}/employees`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
     if (!res.ok) throw new Error('Ошибка загрузки сотрудников');
     const employees = await res.json();
 
@@ -53,7 +67,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ЗАГРУЗКА СМЕН ИЗ БАЗЫ
 async function loadShifts() {
   try {
-    const res = await fetch(`${API_URL}/shifts`);
+    const res = await fetch(`${API_URL}/shifts`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
     if (!res.ok) throw new Error('Ошибка загрузки смен');
     const shifts = await res.json();
 
@@ -157,7 +175,10 @@ async function deleteShift(shiftId, barElement) {
 
   try {
     const res = await fetch(`${API_URL}/shifts/${shiftId}`, {
-      method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
     });
 
     if (!res.ok) {
