@@ -141,7 +141,10 @@ async function addShift() {
   try {
     const res = await fetch(`${API_URL}/shifts`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({
         user_address_id: userAddressId,
         week_day: weekDay,
