@@ -292,21 +292,61 @@ async function deleteShift(shiftId, barElement) {
 
 // СТАТИСТИКА ПО СОТРУДНИКАМ
 async function showStats() {
+  const oldModal = document.getElementById('statsModal');
+  if (oldModal) oldModal.remove();
+
   const modalHtml = `
-    <div class="stats-modal-overlay" id="statsModal">
-      <div class="stats-modal">
-        <h2>Статистика по сотрудникам</h2>
-        
-        <div class="period-selector">
-          <label>Период:</label>
-          <select id="statsMonth"></select>
-          <select id="statsYear"></select>
-          <button onclick="loadStatsForPeriod()">Показать</button>
-          <button class="stats-close-btn" onclick="closeStatsModal()" style="background:#666;">Закрыть</button>
+    <div id="statsModal" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    " onclick="if(event.target === this) window.closeStatsModal()">
+      <div style="
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      ">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2 style="margin:0; color:#333;">Статистика по сотрудникам</h2>
+          <button onclick="window.closeStatsModal()" style="
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 0 8px;
+          ">×</button>
         </div>
         
-        <div id="statsContent">
-          <p style="color:#888;">Выберите период и нажмите "Показать"</p>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
+          <label style="font-weight:600;">Период:</label>
+          <select id="statsMonth" style="padding:6px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px;"></select>
+          <select id="statsYear" style="padding:6px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px;"></select>
+          <button onclick="window.loadStatsForPeriod()" style="
+            padding: 6px 14px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+          ">Показать</button>
+        </div>
+        
+        <div id="statsContent" style="min-height:100px;">
+          <p style="color:#888;">Загрузка...</p>
         </div>
       </div>
     </div>
@@ -341,14 +381,18 @@ async function showStats() {
     if (y === currentYear) option.selected = true;
     yearSelect.appendChild(option);
   }
-
-  await loadStatsForPeriod();
+  await window.loadStatsForPeriod();
 }
 
 async function loadStatsForPeriod() {
-  const month = parseInt(document.getElementById('statsMonth').value);
-  const year = parseInt(document.getElementById('statsYear').value);
+  const monthSelect = document.getElementById('statsMonth');
+  const yearSelect = document.getElementById('statsYear');
   const contentDiv = document.getElementById('statsContent');
+
+  if (!monthSelect || !yearSelect || !contentDiv) return;
+
+  const month = parseInt(monthSelect.value);
+  const year = parseInt(yearSelect.value);
 
   const from = new Date(year, month - 1, 1);
   const to = new Date(year, month, 0);
@@ -361,7 +405,7 @@ async function loadStatsForPeriod() {
     'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
   ];
 
-  contentDiv.innerHTML = '<p style="color:#888;">Загрузка...</p>';
+  contentDiv.innerHTML = '<p style="color:#888; text-align:center;">Загрузка...</p>';
 
   try {
     const res = await fetch(`${API_URL}/stats/hours?from=${fromStr}&to=${toStr}`, {
@@ -372,18 +416,18 @@ async function loadStatsForPeriod() {
     const stats = await res.json();
 
     if (stats.length === 0) {
-      contentDiv.innerHTML = '<p style="color:#888;">Нет данных за выбранный период</p>';
+      contentDiv.innerHTML = '<p style="color:#888; text-align:center;">Нет данных за выбранный период</p>';
       return;
     }
 
     let html = `
-      <h3>${monthNames[month - 1]} ${year}</h3>
-      <table class="stats-table">
+      <h3 style="margin-top:0; color:#333;">${monthNames[month - 1]} ${year}</h3>
+      <table style="width:100%; border-collapse:collapse;">
         <thead>
-          <tr>
-            <th>Сотрудник</th>
-            <th>Кол-во смен</th>
-            <th>Часов</th>
+          <tr style="background:#f5f5f5;">
+            <th style="padding:10px 12px; text-align:left; border-bottom:2px solid #ddd;">Сотрудник</th>
+            <th style="padding:10px 12px; text-align:left; border-bottom:2px solid #ddd;">Смен</th>
+            <th style="padding:10px 12px; text-align:left; border-bottom:2px solid #ddd;">Часов</th>
           </tr>
         </thead>
         <tbody>
@@ -399,10 +443,10 @@ async function loadStatsForPeriod() {
       totalHours += hours;
 
       html += `
-        <tr>
-          <td>${s.surname} ${s.name}</td>
-          <td>${shifts}</td>
-          <td>${hours.toFixed(1)}</td>
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:10px 12px;">${s.surname} ${s.name}</td>
+          <td style="padding:10px 12px;">${shifts}</td>
+          <td style="padding:10px 12px;">${hours.toFixed(1)}</td>
         </tr>
       `;
     });
@@ -411,9 +455,9 @@ async function loadStatsForPeriod() {
         </tbody>
         <tfoot>
           <tr style="font-weight:bold; background:#f0f0f0;">
-            <td>Итого</td>
-            <td>${totalShifts}</td>
-            <td>${totalHours.toFixed(1)}</td>
+            <td style="padding:10px 12px;">Итого</td>
+            <td style="padding:10px 12px;">${totalShifts}</td>
+            <td style="padding:10px 12px;">${totalHours.toFixed(1)}</td>
           </tr>
         </tfoot>
       </table>
@@ -423,9 +467,18 @@ async function loadStatsForPeriod() {
 
   } catch (error) {
     console.error('Ошибка статистики:', error);
-    contentDiv.innerHTML = '<p style="color:red;">Не удалось загрузить статистику: ' + error.message + '</p>';
+    contentDiv.innerHTML = '<p style="color:red; text-align:center;">Не удалось загрузить: ' + error.message + '</p>';
   }
 }
+
+function closeStatsModal() {
+  const modal = document.getElementById('statsModal');
+  if (modal) modal.remove();
+}
+
+window.showStats = showStats;
+window.loadStatsForPeriod = loadStatsForPeriod;
+window.closeStatsModal = closeStatsModal;
 
 function closeStatsModal() {
   const modal = document.getElementById('statsModal');
