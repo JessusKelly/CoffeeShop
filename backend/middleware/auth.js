@@ -11,11 +11,13 @@ module.exports = (req, res, next) => {
     if (!token) {
       return res.status(401).json({ error: 'Токен не найден' });
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const secret = process.env.JWT_SECRET || 'coffeeshop_secret_key_2026_change_me'; 
+    console.log('Попытка проверить токен...');
+    const decoded = jwt.verify(token, secret);
     req.user = decoded;
     next();
   } catch (err) {
+    console.error('Ошибка проверки токена:', err.message);
     res.status(403).json({ error: 'Токен недействителен' });
   }
 };

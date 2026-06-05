@@ -22,15 +22,16 @@ router.post('/login', async (req, res) => {
     //if (!validPassword) {
     //  return res.status(401).json({ error: 'Неверный логин или пароль' });
     //}
+    const secret = process.env.JWT_SECRET || 'coffeeshop_secret_key_2026_change_me';
 
     const token = jwt.sign(
-      { 
+    { 
         id: user.id, 
         role: user.role,
         login: user.login 
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+    },
+    secret,
+    { expiresIn: '8h' }
     );
 
     res.json({
