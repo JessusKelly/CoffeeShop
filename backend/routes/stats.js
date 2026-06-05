@@ -21,9 +21,11 @@ router.get('/hours', authMiddleware, async (req, res) => {
       FROM user_account ua
       LEFT JOIN user_work_addresses uwa ON ua.id = uwa.user_id
       LEFT JOIN schedule s ON uwa.id = s.user_address_id
+        AND s.valid_from <= $2::date
+        AND s.valid_to >= $1::date
       GROUP BY ua.id, ua.surname, ua.name
       ORDER BY ua.surname
-    `);
+    `, [from, to]);
     
     res.json(result.rows);
   } catch (error) {
