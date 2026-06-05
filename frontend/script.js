@@ -292,12 +292,76 @@ async function deleteShift(shiftId, barElement) {
 
 // СТАТИСТИКА ПО СОТРУДНИКАМ
 async function showStats() {
+  const modalHtml = `
+    <div class="stats-modal-overlay" id="statsModal">
+      <div class="stats-modal">
+        <h2>Статистика по сотрудникам</h2>
+        
+        <div class="period-selector">
+          <label>Период:</label>
+          <select id="statsMonth"></select>
+          <select id="statsYear"></select>
+          <button onclick="loadStatsForPeriod()">Показать</button>
+          <button class="stats-close-btn" onclick="closeStatsModal()" style="background:#666;">Закрыть</button>
+        </div>
+        
+        <div id="statsContent">
+          <p style="color:#888;">Выберите период и нажмите "Показать"</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+  const monthSelect = document.getElementById('statsMonth');
+  const yearSelect = document.getElementById('statsYear');
+  
+  const months = [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+  ];
+  
   const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth(), 1);
-  const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  months.forEach((m, i) => {
+    const option = document.createElement('option');
+    option.value = i + 1;
+    option.textContent = m;
+    if (i === currentMonth) option.selected = true;
+    monthSelect.appendChild(option);
+  });
+
+  for (let y = currentYear - 1; y <= currentYear + 1; y++) {
+    const option = document.createElement('option');
+    option.value = y;
+    option.textContent = y;
+    if (y === currentYear) option.selected = true;
+    yearSelect.appendChild(option);
+  }
+
+  await loadStatsForPeriod();
+}
+
+async function loadStatsForPeriod() {
+  const month = parseInt(document.getElementById('statsMonth').value);
+  const year = parseInt(document.getElementById('statsYear').value);
+  const contentDiv = document.getElementById('statsContent');
+
+  const from = new Date(year, month - 1, 1);
+  const to = new Date(year, month, 0);
 
   const fromStr = formatDateForAPI(from);
   const toStr = formatDateForAPI(to);
+
+  const monthNames = [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+  ];
+
+  contentDiv.innerHTML = '<p style="color:#888;">Загрузка...</p>';
 
   try {
     const res = await fetch(`${API_URL}/stats/hours?from=${fromStr}&to=${toStr}`, {
@@ -306,46 +370,66 @@ async function showStats() {
 
     if (!res.ok) throw new Error('Ошибка загрузки статистики');
     const stats = await res.json();
+
+    if (stats.length === 0) {
+      contentDiv.innerHTML = '<p style="color:#888;">Нет данных за выбранный период</p>';
+      return;
+    }
+
     let html = `
-      <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; display:flex; justify-content:center; align-items:center;">
-        <div style="background:white; padding:20px; border-radius:10px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto;">
-          <h2>Статистика за ${fromStr} — ${toStr}</h2>
-          <table border="1" cellpadding="8" style="width:100%; border-collapse:collapse;">
-            <thead>
-              <tr>
-                <th>Сотрудник</th>
-                <th>Кол-во смен</th>
-                <th>Часов</th>
-              </tr>
-            </thead>
-            <tbody>
+      <h3>${monthNames[month - 1]} ${year}</h3>
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Сотрудник</th>
+            <th>Кол-во смен</th>
+            <th>Часов</th>
+          </tr>
+        </thead>
+        <tbody>
     `;
 
+    let totalShifts = 0;
+    let totalHours = 0;
+
     stats.forEach(s => {
+      const hours = parseFloat(s.total_hours || 0);
+      const shifts = parseInt(s.shifts_count || 0);
+      totalShifts += shifts;
+      totalHours += hours;
+
       html += `
         <tr>
           <td>${s.surname} ${s.name}</td>
-          <td>${s.shifts_count || 0}</td>
-          <td>${parseFloat(s.total_hours || 0).toFixed(1)}</td>
+          <td>${shifts}</td>
+          <td>${hours.toFixed(1)}</td>
         </tr>
       `;
     });
 
     html += `
-            </tbody>
-          </table>
-          <br>
-          <button onclick="this.parentElement.parentElement.remove()" style="padding:10px 20px; cursor:pointer;">Закрыть</button>
-        </div>
-      </div>
+        </tbody>
+        <tfoot>
+          <tr style="font-weight:bold; background:#f0f0f0;">
+            <td>Итого</td>
+            <td>${totalShifts}</td>
+            <td>${totalHours.toFixed(1)}</td>
+          </tr>
+        </tfoot>
+      </table>
     `;
 
-    document.body.insertAdjacentHTML('beforeend', html);
+    contentDiv.innerHTML = html;
 
   } catch (error) {
     console.error('Ошибка статистики:', error);
-    alert('Не удалось загрузить статистику: ' + error.message);
+    contentDiv.innerHTML = '<p style="color:red;">Не удалось загрузить статистику: ' + error.message + '</p>';
   }
+}
+
+function closeStatsModal() {
+  const modal = document.getElementById('statsModal');
+  if (modal) modal.remove();
 }
 // ЗАПУСК ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
 document.addEventListener('DOMContentLoaded', () => {
