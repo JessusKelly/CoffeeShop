@@ -150,21 +150,13 @@ function drawShift(shift) {
   bar.innerText = `${start}:00-${end}:00`;
   bar.dataset.shiftId = shift.id;
 
-    // Обычный клик — редактирование (для админа) или просмотр (для сотрудника)
+    // Клик — показываем окно выбора действия
     bar.onclick = function () {
-    if (user && user.role === 1) {
-        editShift(shift, this);
-    } else {
-        alert(`Смена: ${shift.surname} ${shift.name}\nВремя: ${shift.start_time} - ${shift.end_time}\nАдрес: ${shift.address}`);
-    }
-    };
-
-    // Двойной клик — удаление (только для админа)
-    bar.ondblclick = function (e) {
-    e.preventDefault(); // Предотвращаем выделение текста
-    if (user && user.role === 1) {
-        deleteShift(shift.id, this);
-    }
+        if (user && user.role === 1) {
+            showShiftActions(shift, this);
+        } else {
+            alert(`Смена: ${shift.surname} ${shift.name}\nВремя: ${shift.start_time} - ${shift.end_time}\nАдрес: ${shift.address || '—'}`);
+        }
     };
 
   timeline.appendChild(bar);
@@ -231,6 +223,104 @@ async function addShift() {
     alert('Не удалось сохранить смену: ' + error.message);
   }
 }
+
+// ОКНО ВЫБОРА ДЕЙСТВИЯ ДЛЯ СМЕНЫ
+function showShiftActions(shift, barElement) {
+  const oldModal = document.getElementById('shiftActionsModal');
+  if (oldModal) oldModal.remove();
+
+  const modalHtml = `
+    <div id="shiftActionsModal" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    " onclick="if(event.target === this) window.closeShiftActionsModal()">
+      <div style="
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      ">
+        <h3 style="margin-top:0; color:#333;">Смена: ${shift.surname} ${shift.name}</h3>
+        <p style="color:#555; margin:8px 0 20px;">
+          <strong>Время:</strong> ${shift.start_time.substring(0,5)} - ${shift.end_time.substring(0,5)}<br>
+          <strong>Адрес:</strong> ${shift.address || '—'}
+        </p>
+        
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button onclick="window.editFromModal(${shift.id})" style="
+            flex: 1;
+            padding: 10px 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+          ">✏️ Редактировать</button>
+          
+          <button onclick="window.deleteFromModal(${shift.id})" style="
+            flex: 1;
+            padding: 10px 16px;
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+          ">🗑️ Удалить</button>
+          
+          <button onclick="window.closeShiftActionsModal()" style="
+            flex: 1;
+            padding: 10px 16px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+          ">Отмена</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  window._currentEditShift = shift;
+}
+
+function closeShiftActionsModal() {
+  const modal = document.getElementById('shiftActionsModal');
+  if (modal) modal.remove();
+}
+
+function editFromModal(shiftId) {
+  const shift = window._currentEditShift;
+  closeShiftActionsModal();
+  if (shift) editShift(shift, null);
+}
+
+function deleteFromModal(shiftId) {
+  closeShiftActionsModal();
+  if (confirm('Удалить эту смену?')) {
+    deleteShift(shiftId, null);
+  }
+}
+
+window.showShiftActions = showShiftActions;
+window.closeShiftActionsModal = closeShiftActionsModal;
+window.editFromModal = editFromModal;
+window.deleteFromModal = deleteFromModal;
+
 // РЕДАКТИРОВАНИЕ СМЕНЫ
 async function editShift(shift, barElement) {
   const newStart = prompt(`Новое время начала (например, 10):`, parseInt(shift.start_time.split(':')[0]));
@@ -276,8 +366,6 @@ async function editShift(shift, barElement) {
 
 // УДАЛЕНИЕ СМЕНЫ
 async function deleteShift(shiftId, barElement) {
-  if (!confirm('Удалить эту смену?')) return;
-
   try {
     const res = await fetch(`${API_URL}/shifts/${shiftId}`, {
       method: 'DELETE',
@@ -288,8 +376,12 @@ async function deleteShift(shiftId, barElement) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Ошибка сервера');
     }
-
-    barElement.remove();
+    
+    if (barElement) {
+      barElement.remove();
+    } else {
+      reloadShifts();
+    }
 
   } catch (error) {
     console.error('Ошибка при удалении смены:', error);
