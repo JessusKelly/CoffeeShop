@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход в систему</title>
+    <style>
+        .error { color: red; font-size: 0.9em; display: none; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Вход</h2>
+        <input type="text" id="login" placeholder="Логин">
+        <input type="password" id="password" placeholder="Пароль">
+        <p class="error" id="error-msg">Неверный логин или пароль</p>
+        <button onclick="doLogin()">Войти</button>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001/api'; 
+
+        async function doLogin() {
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = 'index.html';
+                } else {
+                    errorMsg.style.display = 'block';
+                    errorMsg.innerText = data.error || 'Ошибка входа';
+                }
+            } catch (e) {
+                errorMsg.style.display = 'block';
+                errorMsg.innerText = 'Ошибка соединения с сервером';
+            }
+        }
+    </script>
+</body>
+</html>
