@@ -266,7 +266,7 @@ function showShiftActions(shift, barElement) {
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
-          ">✏️ Редактировать</button>
+          ">Редактировать</button>
           
           <button onclick="window.deleteFromModal(${shift.id})" style="
             flex: 1;
@@ -277,7 +277,7 @@ function showShiftActions(shift, barElement) {
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
-          ">🗑️ Удалить</button>
+          ">Удалить</button>
           
           <button onclick="window.closeShiftActionsModal()" style="
             flex: 1;
@@ -376,7 +376,7 @@ async function deleteShift(shiftId, barElement) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Ошибка сервера');
     }
-    
+
     if (barElement) {
       barElement.remove();
     } else {
