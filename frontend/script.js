@@ -42,24 +42,34 @@ function isToday(date) {
 // НАВИГАЦИЯ ПО ДАТАМ
 function changeDate(days) {
   currentDate.setDate(currentDate.getDate() + days);
-  loadPageData();
+  updateDateDisplay();
+  reloadShifts();
 }
 
 function goToToday() {
   currentDate = new Date();
-  loadPageData();
+  updateDateDisplay();
+  reloadShifts();
 }
 
-// ЗАГРУЗКА ДАННЫХ СТРАНИЦЫ
-async function loadPageData() {
+function updateDateDisplay() {
   const dateElement = document.getElementById('date');
   if (dateElement) {
     dateElement.innerText = formatDateForDisplay(currentDate);
   }
+}
 
+async function reloadShifts() {
+  document.querySelectorAll('.timeline').forEach(tl => {
+    tl.innerHTML = '';
+  });
+  await loadShiftsForDate(formatDateForAPI(currentDate));
+}
+
+async function loadPageData() {
+  updateDateDisplay();
   const container = document.getElementById('timelineContainer');
   const nameSelect = document.getElementById('nameInput');
-
   container.innerHTML = '';
   const timeMarks = document.createElement('div');
   timeMarks.className = 'time';
@@ -82,9 +92,7 @@ async function loadPageData() {
 
     employees.forEach(person => {
       window.userAddressMap[person.id] = person.user_address_id;
-
       nameSelect.add(new Option(`${person.surname} ${person.name}`, person.id));
-
       const row = document.createElement('div');
       row.className = 'worker-row';
       row.innerHTML = `
@@ -96,7 +104,6 @@ async function loadPageData() {
       `;
       container.appendChild(row);
     });
-
     await loadShiftsForDate(formatDateForAPI(currentDate));
 
   } catch (error) {
@@ -259,7 +266,7 @@ async function editShift(shift, barElement) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Ошибка сервера');
     }
-    loadPageData();
+    reloadShifts();
 
   } catch (error) {
     console.error('Ошибка при редактировании:', error);
@@ -480,10 +487,6 @@ window.showStats = showStats;
 window.loadStatsForPeriod = loadStatsForPeriod;
 window.closeStatsModal = closeStatsModal;
 
-function closeStatsModal() {
-  const modal = document.getElementById('statsModal');
-  if (modal) modal.remove();
-}
 // ЗАПУСК ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
 document.addEventListener('DOMContentLoaded', () => {
   loadPageData();
