@@ -217,10 +217,12 @@ async function addShift() {
     const newShift = await res.json();
 
     drawShift({
-      id: newShift.id,
-      user_id: parseInt(userId),
-      start_time: startTimeStr,
-      end_time: endTimeStr
+    id: newShift.id,
+    user_id: parseInt(userId),
+    user_address_id: userAddressId,
+    start_time: startTimeStr,
+    end_time: endTimeStr,
+    week_day: getDayDBFormat(currentDate)
     });
 
   } catch (error) {
