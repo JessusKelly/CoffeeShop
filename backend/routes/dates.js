@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
+// GET /api/dates/shifts?date=2026-06-19
 router.get('/shifts', async (req, res) => {
   const { date } = req.query;
   
@@ -14,10 +15,9 @@ router.get('/shifts', async (req, res) => {
       SELECT 
         s.id,
         s.shift_date,
+        s.week_day,
         s.start_time,
         s.end_time,
-        s.valid_from,
-        s.valid_to,
         s.user_address_id,
         ua.id as user_id,
         ua.surname,
@@ -30,17 +30,19 @@ router.get('/shifts', async (req, res) => {
       JOIN user_account ua ON uwa.user_id = ua.id
       LEFT JOIN role r ON ua.role = r.id
       LEFT JOIN addres_coffee ac ON uwa.address = ac.id
-      WHERE s.shift_date = $1
+      WHERE s.shift_date = $1::date
       ORDER BY s.start_time
     `, [date]);
+    
+    console.log(`Shifts for ${date}:`, result.rows.length);
     
     res.json({
       date: date,
       shifts: result.rows
     });
   } catch (error) {
-    console.error('Ошибка при получении смен:', error);
-    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    console.error('Ошибка:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
