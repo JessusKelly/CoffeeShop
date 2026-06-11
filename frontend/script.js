@@ -121,7 +121,10 @@ async function loadShiftsForDate(dateStr) {
     if (!res.ok) throw new Error('Ошибка загрузки смен');
     const data = await res.json();
 
+    console.log(`Loaded shifts for ${dateStr}:`, data.shifts);
+    
     data.shifts.forEach(shift => {
+      console.log('Shift:', shift.id, shift.shift_date, shift.week_day);
       drawShift(shift);
     });
   } catch (error) {
@@ -174,7 +177,7 @@ async function addShift() {
   const end = parseInt(document.getElementById('timeEnd').value);
 
   if (start >= end) {
-    alert("Ошибка во времени! Конец должен быть позже начала.");
+    alert("Ошибка во времени!");
     return;
   }
 
@@ -188,10 +191,16 @@ async function addShift() {
     return;
   }
 
-  // ← ИСПОЛЬЗУЕМ КОНКРЕТНУЮ ДАТУ
   const shiftDateStr = formatDateForAPI(currentDate);
   const startTimeStr = `${start.toString().padStart(2, '0')}:00:00`;
   const endTimeStr = `${end.toString().padStart(2, '0')}:00:00`;
+
+  console.log('Adding shift:', {
+    user_address_id: userAddressId,
+    shift_date: shiftDateStr,
+    start_time: startTimeStr,
+    end_time: endTimeStr
+  });
 
   try {
     const res = await fetch(`${API_URL}/shifts`, {
@@ -202,7 +211,7 @@ async function addShift() {
       },
       body: JSON.stringify({
         user_address_id: userAddressId,
-        shift_date: shiftDateStr,  // ← НОВОЕ ПОЛЕ
+        shift_date: shiftDateStr,
         start_time: startTimeStr,
         end_time: endTimeStr
       })
@@ -214,6 +223,7 @@ async function addShift() {
     }
 
     const newShift = await res.json();
+    console.log('Created shift:', newShift);
 
     drawShift({
       id: newShift.id,
@@ -225,8 +235,8 @@ async function addShift() {
     });
 
   } catch (error) {
-    console.error('Ошибка при добавлении смены:', error);
-    alert('Не удалось сохранить смену: ' + error.message);
+    console.error('Ошибка:', error);
+    alert('Не удалось сохранить: ' + error.message);
   }
 }
 
