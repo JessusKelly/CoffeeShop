@@ -131,16 +131,8 @@ async function loadShiftsForDate(dateStr) {
 
 // ОТРИСОВКА СМЕНЫ
 function drawShift(shift) {
-    // ДЛЯ ОТЛАДКИ
-    console.log('Shift data:', shift);
-    console.log('Shift ID:', shift.id);
-    console.log('User ID:', shift.user_id);
-    
-    const timeline = document.getElementById(`timeline-${shift.user_id}`);
-    if (!timeline) {
-        console.error(`Timeline not found for user ${shift.user_id}`);
-        return;
-    }
+  const timeline = document.getElementById(`timeline-${shift.user_id}`);
+  if (!timeline) return;
 
   const start = parseInt(shift.start_time.split(':')[0]);
   const end = parseInt(shift.end_time.split(':')[0]);
@@ -156,16 +148,21 @@ function drawShift(shift) {
   bar.style.left = left + '%';
   bar.style.width = width + '%';
   bar.innerText = `${start}:00-${end}:00`;
+  
   bar.dataset.shiftId = shift.id;
+  bar.dataset.userAddressId = shift.user_address_id;
+  bar.dataset.startTime = shift.start_time;
+  bar.dataset.endTime = shift.end_time;
+  bar.dataset.weekDay = shift.week_day;
 
-    // Клик — показываем окно выбора действия
-    bar.onclick = function () {
-        if (user && user.role === 1) {
-            showShiftActions(shift, this);
-        } else {
-            alert(`Смена: ${shift.surname} ${shift.name}\nВремя: ${shift.start_time} - ${shift.end_time}\nАдрес: ${shift.address || '—'}`);
-        }
-    };
+  // Клик — показываем окно выбора действия
+  bar.onclick = function () {
+    if (user && user.role === 1) {
+      showShiftActions(shift, this);
+    } else {
+      alert(`Смена: ${shift.surname} ${shift.name}\nВремя: ${shift.start_time} - ${shift.end_time}\nАдрес: ${shift.address || '—'}`);
+    }
+  };
 
   timeline.appendChild(bar);
 }
@@ -312,9 +309,25 @@ function closeShiftActionsModal() {
 }
 
 function editFromModal(shiftId) {
-  const shift = window._currentEditShift;
   closeShiftActionsModal();
-  if (shift) editShift(shift, null);
+  
+  const bar = document.querySelector(`.day[data-shift-id="${shiftId}"]`);
+  
+  if (!bar) {
+    console.error('Shift element not found');
+    return;
+  }
+  
+  const shiftData = {
+    id: parseInt(bar.dataset.shiftId),
+    user_address_id: parseInt(bar.dataset.userAddressId),
+    start_time: bar.dataset.startTime,
+    end_time: bar.dataset.endTime,
+    week_day: parseInt(bar.dataset.weekDay)
+  };
+  
+  console.log('Editing shift from DOM:', shiftData);
+  editShift(shiftData, bar);
 }
 
 function deleteFromModal(shiftId) {
