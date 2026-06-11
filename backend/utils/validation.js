@@ -17,6 +17,8 @@ async function checkShiftOverlap(userAddressId, weekDay, startTime, endTime, exc
     excludeShiftId
   ]);
   
+  console.log('Overlap check:', { userAddressId, weekDay, startTime, endTime, excludeShiftId, found: result.rows.length });
+  
   return result.rows.length > 0;
 }
 

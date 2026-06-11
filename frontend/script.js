@@ -345,6 +345,14 @@ async function editShift(shift, barElement) {
     return;
   }
 
+  console.log('Sending edit request:', {
+    id: shift.id,
+    user_address_id: shift.user_address_id,
+    week_day: getDayDBFormat(currentDate),
+    start_time: `${startNum.toString().padStart(2, '0')}:00:00`,
+    end_time: `${endNum.toString().padStart(2, '0')}:00:00`
+  });
+
   try {
     const res = await fetch(`${API_URL}/shifts/${shift.id}`, {
       method: 'PUT',
@@ -353,7 +361,7 @@ async function editShift(shift, barElement) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        uuser_address_id: shift.user_address_id || window.userAddressMap[shift.user_id],
+        user_address_id: shift.user_address_id,
         week_day: getDayDBFormat(currentDate),
         start_time: `${startNum.toString().padStart(2, '0')}:00:00`,
         end_time: `${endNum.toString().padStart(2, '0')}:00:00`

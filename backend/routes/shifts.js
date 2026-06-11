@@ -84,42 +84,46 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 });
 
 router.put('/:id', authMiddleware, async (req, res) => {
-    if (req.user.role !== 1) {
-        return res.status(403).json({ error: 'Только администраторы могут редактировать смены' });
+  if (req.user.role !== 1) {
+    return res.status(403).json({ error: 'Только администраторы могут редактировать смены' });
+  }
+  
+  const { id } = req.params;
+  const { user_address_id, week_day, start_time, end_time } = req.body;
+
+  console.log('Editing shift:', { id, user_address_id, week_day, start_time, end_time });
+
+  if (!user_address_id || !week_day || !start_time || !end_time) {
+    return res.status(400).json({ error: 'Не заполнены все обязательные поля' });
+  }
+
+  try {
+    const hasOverlap = await checkShiftOverlap(user_address_id, week_day, start_time, end_time, id);
+    console.log('Has overlap:', hasOverlap);
+    
+    if (hasOverlap) {
+      return res.status(400).json({ error: 'У сотрудника уже есть смена в это время' });
+    }
+
+    const result = await pool.query(`
+      UPDATE schedule 
+      SET user_address_id = $1, 
+          week_day = $2, 
+          start_time = $3, 
+          end_time = $4
+      WHERE id = $5
+      RETURNING *
+    `, [user_address_id, week_day, start_time, end_time, id]);
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Смена не найдена' });
     }
     
-    const { id } = req.params;
-    const { user_address_id, week_day, start_time, end_time } = req.body;
-
-    if (!user_address_id || !week_day || !start_time || !end_time) {
-        return res.status(400).json({ error: 'Не заполнены все обязательные поля' });
-    }
-
-    try {
-        const hasOverlap = await checkShiftOverlap(user_address_id, week_day, start_time, end_time, id);
-        if (hasOverlap) {
-        return res.status(400).json({ error: 'У сотрудника уже есть смена в это время' });
-        }
-
-        const result = await pool.query(`
-        UPDATE schedule 
-        SET user_address_id = $1, 
-            week_day = $2, 
-            start_time = $3, 
-            end_time = $4
-        WHERE id = $5
-        RETURNING *
-        `, [user_address_id, week_day, start_time, end_time, id]);
-        
-        if (result.rowCount === 0) {
-        return res.status(404).json({ error: 'Смена не найдена' });
-        }
-        
-        res.json(result.rows[0]);
-    } catch (error) {
-        console.error('Ошибка при редактировании смены:', error);
-        res.status(500).json({ error: error.message });
-    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Ошибка при редактировании смены:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;
