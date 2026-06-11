@@ -128,26 +128,6 @@ router.put('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-async function checkShiftOverlap(userAddressId, shiftDate, startTime, endTime, excludeShiftId = null) {
-  const query = `
-    SELECT id FROM schedule
-    WHERE user_address_id = $1
-      AND shift_date = $2
-      AND ($5 IS NULL OR id != $5)
-      AND NOT (end_time <= $3 OR start_time >= $4)
-  `;
-  
-  const result = await pool.query(query, [
-    userAddressId,
-    shiftDate,
-    startTime,
-    endTime,
-    excludeShiftId
-  ]);
-  
-  return result.rows.length > 0;
-}
-
 router.delete('/:id', authMiddleware, async (req, res) => {
     if (req.user.role !== 1) {
         return res.status(403).json({ error: 'У вас нет прав на удаление смен' });
