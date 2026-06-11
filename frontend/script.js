@@ -353,7 +353,7 @@ async function editShift(shift, barElement) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        user_address_id: window.userAddressMap[shift.user_id],
+        uuser_address_id: shift.user_address_id || window.userAddressMap[shift.user_id],
         week_day: getDayDBFormat(currentDate),
         start_time: `${startNum.toString().padStart(2, '0')}:00:00`,
         end_time: `${endNum.toString().padStart(2, '0')}:00:00`

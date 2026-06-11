@@ -17,6 +17,7 @@ router.get('/shifts', async (req, res) => {
     const result = await pool.query(`
       SELECT 
         s.id,
+        s.user_address_id,
         s.week_day,
         s.start_time,
         s.end_time,
