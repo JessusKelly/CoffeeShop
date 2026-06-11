@@ -188,7 +188,8 @@ async function addShift() {
     return;
   }
 
-  const weekDay = getDayDBFormat(currentDate);
+  // ← ИСПОЛЬЗУЕМ КОНКРЕТНУЮ ДАТУ
+  const shiftDateStr = formatDateForAPI(currentDate);
   const startTimeStr = `${start.toString().padStart(2, '0')}:00:00`;
   const endTimeStr = `${end.toString().padStart(2, '0')}:00:00`;
 
@@ -201,11 +202,9 @@ async function addShift() {
       },
       body: JSON.stringify({
         user_address_id: userAddressId,
-        week_day: weekDay,
+        shift_date: shiftDateStr,  // ← НОВОЕ ПОЛЕ
         start_time: startTimeStr,
-        end_time: endTimeStr,
-        valid_from: formatDateForAPI(currentDate),
-        valid_to: formatDateForAPI(currentDate)
+        end_time: endTimeStr
       })
     });
 
@@ -217,12 +216,12 @@ async function addShift() {
     const newShift = await res.json();
 
     drawShift({
-    id: newShift.id,
-    user_id: parseInt(userId),
-    user_address_id: userAddressId,
-    start_time: startTimeStr,
-    end_time: endTimeStr,
-    week_day: getDayDBFormat(currentDate)
+      id: newShift.id,
+      user_id: parseInt(userId),
+      user_address_id: userAddressId,
+      shift_date: shiftDateStr,
+      start_time: startTimeStr,
+      end_time: endTimeStr
     });
 
   } catch (error) {
@@ -360,14 +359,6 @@ async function editShift(shift, barElement) {
     return;
   }
 
-  console.log('Sending edit request:', {
-    id: shift.id,
-    user_address_id: shift.user_address_id,
-    week_day: getDayDBFormat(currentDate),
-    start_time: `${startNum.toString().padStart(2, '0')}:00:00`,
-    end_time: `${endNum.toString().padStart(2, '0')}:00:00`
-  });
-
   try {
     const res = await fetch(`${API_URL}/shifts/${shift.id}`, {
       method: 'PUT',
@@ -377,7 +368,7 @@ async function editShift(shift, barElement) {
       },
       body: JSON.stringify({
         user_address_id: shift.user_address_id,
-        week_day: getDayDBFormat(currentDate),
+        shift_date: formatDateForAPI(currentDate), 
         start_time: `${startNum.toString().padStart(2, '0')}:00:00`,
         end_time: `${endNum.toString().padStart(2, '0')}:00:00`
       })
@@ -387,6 +378,7 @@ async function editShift(shift, barElement) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Ошибка сервера');
     }
+
     reloadShifts();
 
   } catch (error) {

@@ -10,19 +10,15 @@ router.get('/shifts', async (req, res) => {
   }
 
   try {
-    const dateObj = new Date(date);
-    let dayOfWeek = dateObj.getDay();
-    dayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
-
     const result = await pool.query(`
       SELECT 
         s.id,
-        s.user_address_id,
-        s.week_day,
+        s.shift_date,
         s.start_time,
         s.end_time,
         s.valid_from,
         s.valid_to,
+        s.user_address_id,
         ua.id as user_id,
         ua.surname,
         ua.name,
@@ -34,19 +30,16 @@ router.get('/shifts', async (req, res) => {
       JOIN user_account ua ON uwa.user_id = ua.id
       LEFT JOIN role r ON ua.role = r.id
       LEFT JOIN addres_coffee ac ON uwa.address = ac.id
-      WHERE s.week_day = $1
-        AND (s.valid_from IS NULL OR s.valid_from <= $2)
-        AND (s.valid_to IS NULL OR s.valid_to >= $2)
+      WHERE s.shift_date = $1
       ORDER BY s.start_time
-    `, [dayOfWeek, date]);
+    `, [date]);
     
     res.json({
       date: date,
-      dayOfWeek: dayOfWeek,
       shifts: result.rows
     });
   } catch (error) {
-    console.error('Ошибка при получении смен на дату:', error);
+    console.error('Ошибка при получении смен:', error);
     res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
