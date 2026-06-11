@@ -19,9 +19,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (user) {
     const userInfo = document.getElementById('currentUser');
     if (userInfo) {
-      const fullName = (user.surname && user.name) 
-        ? `${user.surname} ${user.name}` 
-        : (user.login || 'Пользователь');
+      let fullName;
+      if (user.surname && user.name) {
+        fullName = `${user.surname} ${user.name}`;
+      } else if (user.name) {
+        fullName = user.name;
+      } else {
+        fullName = user.login || 'Пользователь';
+      }
+      
       const roleText = user.role === 1 ? '(Админ)' : '(Сотрудник)';
       userInfo.innerText = `${fullName} ${roleText}`;
     }
