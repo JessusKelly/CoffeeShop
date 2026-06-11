@@ -141,9 +141,6 @@ function drawShift(shift) {
         console.error(`Timeline not found for user ${shift.user_id}`);
         return;
     }
-    
-  const timeline = document.getElementById(`timeline-${shift.user_id}`);
-  if (!timeline) return;
 
   const start = parseInt(shift.start_time.split(':')[0]);
   const end = parseInt(shift.end_time.split(':')[0]);
