@@ -131,6 +131,17 @@ async function loadShiftsForDate(dateStr) {
 
 // ОТРИСОВКА СМЕНЫ
 function drawShift(shift) {
+    // ДЛЯ ОТЛАДКИ
+    console.log('Shift data:', shift);
+    console.log('Shift ID:', shift.id);
+    console.log('User ID:', shift.user_id);
+    
+    const timeline = document.getElementById(`timeline-${shift.user_id}`);
+    if (!timeline) {
+        console.error(`Timeline not found for user ${shift.user_id}`);
+        return;
+    }
+    
   const timeline = document.getElementById(`timeline-${shift.user_id}`);
   if (!timeline) return;
 
