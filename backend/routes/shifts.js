@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const authMiddleware = require('../middleware/auth');
+const { checkShiftOverlap } = require('../utils/validation');
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -31,14 +33,18 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   const { user_address_id, week_day, start_time, end_time } = req.body;
+  if (req.user.role !== 1) return res.status(403).json({ error: 'Только администраторы могут добавлять смены' });
   if (!user_address_id || !week_day || !start_time || !end_time) {
     return res.status(400).json({ 
       error: 'Не заполнены все обязательные поля' 
     });
   }
-
+  const hasOverlap = await checkShiftOverlap(user_address_id, week_day, start_time, end_time);
+    if (hasOverlap) {
+        return res.status(400).json({ error: 'У сотрудника уже есть смена в это время' });
+    }
   try {
     const result = await pool.query(`
       INSERT INTO schedule (user_address_id, week_day, start_time, end_time)
@@ -53,22 +59,61 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
+router.delete('/:id', authMiddleware, async (req, res) => {
+    if (req.user.role !== 1) {
+        return res.status(403).json({ error: 'У вас нет прав на удаление смен' });
+    }
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            'DELETE FROM schedule WHERE id = $1 RETURNING *', 
+            [id]
+        );
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Смена не найдена' });
+        }
+        
+        res.json({ success: true, deleted: result.rows[0] });
+    } catch (error) {
+        console.error('Ошибка при удалении смены:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
+router.put('/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 1) {
+    return res.status(403).json({ error: 'Только администраторы могут редактировать смены' });
+  }
+  
+  const { id } = req.params;
+  const { user_address_id, week_day, start_time, end_time } = req.body;
+
+  if (!user_address_id || !week_day || !start_time || !end_time) {
+    return res.status(400).json({ error: 'Не заполнены все обязательные поля' });
+  }
+    const hasOverlap = await checkShiftOverlap(user_address_id, week_day, start_time, end_time, id);
+    if (hasOverlap) {
+        return res.status(400).json({ error: 'У сотрудника уже есть смена в это время' });
+    }
   try {
-    const result = await pool.query(
-      'DELETE FROM schedule WHERE id = $1 RETURNING *', 
-      [id]
-    );
+    const result = await pool.query(`
+      UPDATE schedule 
+      SET user_address_id = $1, 
+          week_day = $2, 
+          start_time = $3, 
+          end_time = $4
+      WHERE id = $5
+      RETURNING *
+    `, [user_address_id, week_day, start_time, end_time, id]);
     
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Смена не найдена' });
     }
     
-    res.json({ success: true, deleted: result.rows[0] });
+    res.json(result.rows[0]);
   } catch (error) {
-    console.error('Ошибка при удалении смены:', error);
+    console.error('Ошибка при редактировании смены:', error);
     res.status(500).json({ error: error.message });
   }
 });
