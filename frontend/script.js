@@ -1,10 +1,49 @@
 const API_URL = 'https://coffeeshop-api-s8ft.onrender.com/api';
+
 document.addEventListener('DOMContentLoaded', async () => {
   const dateElement = document.getElementById('date');
   if (dateElement) {
     const options = { day: 'numeric', month: 'long', weekday: 'long' };
     const now = new Date().toLocaleDateString('ru-RU', options);
     dateElement.innerText = now.charAt(0).toUpperCase() + now.slice(1);
+  }
+
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsDropdown = document.getElementById('settingsDropdown');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  if (settingsBtn && settingsDropdown) {
+    settingsBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      settingsDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', () => {
+      settingsDropdown.classList.remove('show');
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Вы уверены, что хотите выйти из профиля?')) {
+        alert('Вы успешно вышли!');
+      }
+    });
+  }
+
+  const avatarSpan = document.getElementById('userAvatarName');
+  if (avatarSpan) {
+    const nameText = avatarSpan.innerText.trim();
+    if (nameText.length > 2) {
+      const words = nameText.split(/\s+/);
+      if (words.length >= 2) {
+        const firstLetter = words[0].charAt(0).toUpperCase();
+        const secondLetter = words[1].charAt(0).toUpperCase();
+        avatarSpan.innerText = firstLetter + secondLetter;
+      } else if (words.length === 1) {
+        avatarSpan.innerText = words[0].charAt(0).toUpperCase();
+      }
+    }
   }
 
   const container = document.getElementById('timelineContainer');
@@ -50,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     container.innerHTML += '<p style="color:red; padding:20px;">Не удалось загрузить данные с сервера. Убедитесь, что бэкенд запущен.</p>';
   }
 });
-// ЗАГРУЗКА СМЕН ИЗ БАЗЫ
+
 async function loadShifts() {
   try {
     const res = await fetch(`${API_URL}/shifts`);
@@ -68,7 +107,7 @@ async function loadShifts() {
     console.error('Ошибка при загрузке смен:', error);
   }
 }
-// ОТРИСОВКА ОДНОЙ СМЕНЫ
+
 function drawShift(shift) {
   const timeline = document.getElementById(`timeline-${shift.user_id}`);
   if (!timeline) return;
@@ -95,7 +134,7 @@ function drawShift(shift) {
 
   timeline.appendChild(bar);
 }
-// ДОБАВЛЕНИЕ НОВОЙ СМЕНЫ
+
 async function addShift() {
   const userId = document.getElementById('nameInput').value;
   const start = parseInt(document.getElementById('timeStart').value);
@@ -151,7 +190,7 @@ async function addShift() {
     alert('Не удалось сохранить смену: ' + error.message);
   }
 }
-// УДАЛЕНИЕ СМЕНЫ
+
 async function deleteShift(shiftId, barElement) {
   if (!confirm('Удалить эту смену?')) return;
 
