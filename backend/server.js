@@ -41,6 +41,7 @@ app.get('/api/health', (req, res) => {
     time: new Date().toLocaleTimeString('ru-RU')
   });
 });
+const PORT = process.env.PORT || 1000;
 app.listen(PORT, () => {
-  console.log(`Сервер запущен`);
+  console.log(`Сервер запущен на порту ${PORT}`);
 });
