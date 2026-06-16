@@ -1,0 +1,16 @@
+name: Keep Render Alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Каждые 10 минут
+  workflow_dispatch:  # Ручной запуск
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API
+        run: curl -f https://coffeeshop-api-s8ft.onrender.com/api/health || exit 1
+      
+      - name: Ping Frontend
+        run: curl -f https://coffeeshop-peach-five.vercel.app || exit 1
