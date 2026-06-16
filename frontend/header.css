@@ -1,0 +1,27 @@
+header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    width: 100%;
+}
+
+.navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #64748B;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.navigation:hover {
+    background-color: #F1F5F9;
+    color: #0F172A;
+}
