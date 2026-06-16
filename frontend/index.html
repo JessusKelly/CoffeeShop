@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoffeeShop</title>
+
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="schedule.css">
     <link rel="stylesheet" href="style.css">
+
     <script src="script.js"></script>
 </head>
 
@@ -27,15 +31,12 @@
                     </svg>
                 </button>
 
-                <!-- ОБНОВЛЕННОЕ МЕНЮ -->
                 <div class="dropdown-menu" id="settingsDropdown">
                     <div class="user-profile-header">
                         <span id="currentUser">Загрузка...</span>
                     </div>
 
-                    <!-- Разделительная линия -->
                     <div class="dropdown-divider"></div>
-                    <!-- Кнопка Статистики с иконкой графика -->
                     <button id="stats" onclick="showStats()">
                         <svg xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -47,7 +48,6 @@
                         Статистика
                     </button>
 
-                    <!-- Кнопка Выхода -->
                     <button id="logout" onclick="logout()">
                         <svg xmlns="http://w3.org" width="14" height="14" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -60,12 +60,16 @@
                     </button>
                 </div>
             </div>
-
-            <div class="avatar">
-                <span id="currentUser"></span>
-            </div>
         </div>
-
+        <div class="avatar">
+            <span id="currentUser"></span>
+            <svg xmlns="http://w3.org" width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <circle cx="18" cy="18" r="18" fill="#4F46E5" />
+                <path d="M24 25V23C24 20.7909 22.2091 19 20 19H16C13.7909 19 12 20.7909 12 23V25" stroke="white"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="18" cy="13" r="3.5" stroke="white" stroke-width="2" />
+            </svg>
+        </div>
     </header>
 
     <main>

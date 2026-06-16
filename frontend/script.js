@@ -1,4 +1,3 @@
-// КОНФИГУРАЦИЯ
 const API_URL = 'https://coffeeshop-api-s8ft.onrender.com/api';
 
 const token = localStorage.getItem('token');
@@ -34,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 function formatDateForAPI(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -58,7 +56,6 @@ function isToday(date) {
   return date.toDateString() === today.toDateString();
 }
 
-// НАВИГАЦИЯ ПО ДАТАМ
 function changeDate(days) {
   currentDate.setDate(currentDate.getDate() + days);
   updateDateDisplay();
@@ -131,7 +128,6 @@ async function loadPageData() {
   }
 }
 
-// ЗАГРУЗКА СМЕН НА КОНКРЕТНУЮ ДАТУ
 async function loadShiftsForDate(dateStr) {
   try {
     const res = await fetch(`${API_URL}/dates/shifts?date=${dateStr}`, {
@@ -151,7 +147,6 @@ async function loadShiftsForDate(dateStr) {
   }
 }
 
-// ОТРИСОВКА СМЕНЫ
 function drawShift(shift) {
   const timeline = document.getElementById(`timeline-${shift.user_id}`);
   if (!timeline) return;
@@ -177,7 +172,6 @@ function drawShift(shift) {
   bar.dataset.endTime = shift.end_time;
   bar.dataset.weekDay = shift.week_day;
 
-  // Клик — показываем окно выбора действия
   bar.onclick = function () {
     if (user && user.role === 1) {
       showShiftActions(shift, this);
@@ -189,7 +183,6 @@ function drawShift(shift) {
   timeline.appendChild(bar);
 }
 
-// ДОБАВЛЕНИЕ СМЕНЫ
 async function addShift() {
   const userId = document.getElementById('nameInput').value;
   const start = parseInt(document.getElementById('timeStart').value);
@@ -259,7 +252,6 @@ async function addShift() {
   }
 }
 
-// ОКНО ВЫБОРА ДЕЙСТВИЯ ДЛЯ СМЕНЫ
 function showShiftActions(shift, barElement) {
   const oldModal = document.getElementById('shiftActionsModal');
   if (oldModal) oldModal.remove();
@@ -372,7 +364,6 @@ window.closeShiftActionsModal = closeShiftActionsModal;
 window.editFromModal = editFromModal;
 window.deleteFromModal = deleteFromModal;
 
-// РЕДАКТИРОВАНИЕ СМЕНЫ
 async function editShift(shift, barElement) {
   const newStart = prompt(`Новое время начала (например, 10):`, parseInt(shift.start_time.split(':')[0]));
   if (newStart === null) return;
@@ -416,7 +407,6 @@ async function editShift(shift, barElement) {
   }
 }
 
-// УДАЛЕНИЕ СМЕНЫ
 async function deleteShift(shiftId, barElement) {
   try {
     const res = await fetch(`${API_URL}/shifts/${shiftId}`, {
@@ -441,7 +431,6 @@ async function deleteShift(shiftId, barElement) {
   }
 }
 
-// СТАТИСТИКА ПО СОТРУДНИКАМ
 async function showStats() {
   const oldModal = document.getElementById('statsModal');
   if (oldModal) oldModal.remove();
@@ -631,7 +620,6 @@ window.showStats = showStats;
 window.loadStatsForPeriod = loadStatsForPeriod;
 window.closeStatsModal = closeStatsModal;
 
-// ЗАПУСК ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
 document.addEventListener('DOMContentLoaded', () => {
   loadPageData();
 });
@@ -656,7 +644,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- НАДЕЖНАЯ ЛОГИКА ДРОПДАУНА ---
   const settingsBtn = document.getElementById('settingsBtn');
   const settingsDropdown = document.getElementById('settingsDropdown');
 
@@ -674,7 +661,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Клик на кнопку "Выйти" (синхронизировали ID с вашим HTML)
   const logoutElement = document.getElementById('logout');
   if (logoutElement) {
     logoutElement.addEventListener('click', (event) => {
@@ -682,9 +668,8 @@ document.addEventListener("DOMContentLoaded", () => {
       logout();
     });
   }
-}); // Финальное закрытие обработчика DOMContentLoaded
+});
 
-// --- КОД АВТО-АВАТАРКИ (ИСПРАВЛЕННЫЙ) ---
 const avatarSpan = document.getElementById('currentUser');
 if (avatarSpan) {
   const observer = new MutationObserver(() => {
@@ -703,4 +688,3 @@ if (avatarSpan) {
   });
   observer.observe(avatarSpan, { childList: true, characterData: true, subtree: true });
 }
-// ----------------------------------------
