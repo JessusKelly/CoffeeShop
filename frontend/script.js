@@ -15,6 +15,25 @@ function logout() {
 
 let currentDate = new Date();
 
+document.addEventListener('DOMContentLoaded', () => {
+  if (user) {
+    const userInfo = document.getElementById('currentUser');
+    if (userInfo) {
+      let fullName;
+      if (user.surname && user.name) {
+        fullName = `${user.surname} ${user.name}`;
+      } else if (user.name) {
+        fullName = user.name;
+      } else {
+        fullName = user.login || 'Пользователь';
+      }
+      
+      const roleText = user.role === 1 ? '(Админ)' : '(Сотрудник)';
+      userInfo.innerText = `${fullName} ${roleText}`;
+    }
+  }
+});
+
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 function formatDateForAPI(date) {
   const y = date.getFullYear();
@@ -121,7 +140,10 @@ async function loadShiftsForDate(dateStr) {
     if (!res.ok) throw new Error('Ошибка загрузки смен');
     const data = await res.json();
 
+    console.log(`Loaded shifts for ${dateStr}:`, data.shifts);
+    
     data.shifts.forEach(shift => {
+      console.log('Shift:', shift.id, shift.shift_date, shift.week_day);
       drawShift(shift);
     });
   } catch (error) {
@@ -148,16 +170,21 @@ function drawShift(shift) {
   bar.style.left = left + '%';
   bar.style.width = width + '%';
   bar.innerText = `${start}:00-${end}:00`;
+  
   bar.dataset.shiftId = shift.id;
+  bar.dataset.userAddressId = shift.user_address_id;
+  bar.dataset.startTime = shift.start_time;
+  bar.dataset.endTime = shift.end_time;
+  bar.dataset.weekDay = shift.week_day;
 
-    // Клик — показываем окно выбора действия
-    bar.onclick = function () {
-        if (user && user.role === 1) {
-            showShiftActions(shift, this);
-        } else {
-            alert(`Смена: ${shift.surname} ${shift.name}\nВремя: ${shift.start_time} - ${shift.end_time}\nАдрес: ${shift.address || '—'}`);
-        }
-    };
+  // Клик — показываем окно выбора действия
+  bar.onclick = function () {
+    if (user && user.role === 1) {
+      showShiftActions(shift, this);
+    } else {
+      alert(`Смена: ${shift.surname} ${shift.name}\nВремя: ${shift.start_time} - ${shift.end_time}\nАдрес: ${shift.address || '—'}`);
+    }
+  };
 
   timeline.appendChild(bar);
 }
@@ -169,7 +196,7 @@ async function addShift() {
   const end = parseInt(document.getElementById('timeEnd').value);
 
   if (start >= end) {
-    alert("Ошибка во времени! Конец должен быть позже начала.");
+    alert("Ошибка во времени!");
     return;
   }
 
@@ -183,9 +210,16 @@ async function addShift() {
     return;
   }
 
-  const weekDay = getDayDBFormat(currentDate);
+  const shiftDateStr = formatDateForAPI(currentDate);
   const startTimeStr = `${start.toString().padStart(2, '0')}:00:00`;
   const endTimeStr = `${end.toString().padStart(2, '0')}:00:00`;
+
+  console.log('Adding shift:', {
+    user_address_id: userAddressId,
+    shift_date: shiftDateStr,
+    start_time: startTimeStr,
+    end_time: endTimeStr
+  });
 
   try {
     const res = await fetch(`${API_URL}/shifts`, {
@@ -196,11 +230,9 @@ async function addShift() {
       },
       body: JSON.stringify({
         user_address_id: userAddressId,
-        week_day: weekDay,
+        shift_date: shiftDateStr,
         start_time: startTimeStr,
-        end_time: endTimeStr,
-        valid_from: formatDateForAPI(currentDate),
-        valid_to: formatDateForAPI(currentDate)
+        end_time: endTimeStr
       })
     });
 
@@ -210,17 +242,20 @@ async function addShift() {
     }
 
     const newShift = await res.json();
+    console.log('Created shift:', newShift);
 
     drawShift({
       id: newShift.id,
       user_id: parseInt(userId),
+      user_address_id: userAddressId,
+      shift_date: shiftDateStr,
       start_time: startTimeStr,
       end_time: endTimeStr
     });
 
   } catch (error) {
-    console.error('Ошибка при добавлении смены:', error);
-    alert('Не удалось сохранить смену: ' + error.message);
+    console.error('Ошибка:', error);
+    alert('Не удалось сохранить: ' + error.message);
   }
 }
 
@@ -260,7 +295,7 @@ function showShiftActions(shift, barElement) {
           <button onclick="window.editFromModal(${shift.id})" style="
             flex: 1;
             padding: 10px 16px;
-            background: #2563eb;
+            background: #4338CA;
             color: white;
             border: none;
             border-radius: 6px;
@@ -304,9 +339,25 @@ function closeShiftActionsModal() {
 }
 
 function editFromModal(shiftId) {
-  const shift = window._currentEditShift;
   closeShiftActionsModal();
-  if (shift) editShift(shift, null);
+  
+  const bar = document.querySelector(`.day[data-shift-id="${shiftId}"]`);
+  
+  if (!bar) {
+    console.error('Shift element not found');
+    return;
+  }
+  
+  const shiftData = {
+    id: parseInt(bar.dataset.shiftId),
+    user_address_id: parseInt(bar.dataset.userAddressId),
+    start_time: bar.dataset.startTime,
+    end_time: bar.dataset.endTime,
+    week_day: parseInt(bar.dataset.weekDay)
+  };
+  
+  console.log('Editing shift from DOM:', shiftData);
+  editShift(shiftData, bar);
 }
 
 function deleteFromModal(shiftId) {
@@ -345,8 +396,8 @@ async function editShift(shift, barElement) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        user_address_id: window.userAddressMap[shift.user_id],
-        week_day: getDayDBFormat(currentDate),
+        user_address_id: shift.user_address_id,
+        shift_date: formatDateForAPI(currentDate), 
         start_time: `${startNum.toString().padStart(2, '0')}:00:00`,
         end_time: `${endNum.toString().padStart(2, '0')}:00:00`
       })
@@ -356,6 +407,7 @@ async function editShift(shift, barElement) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Ошибка сервера');
     }
+
     reloadShifts();
 
   } catch (error) {
@@ -435,7 +487,7 @@ async function showStats() {
           <select id="statsYear" style="padding:6px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px;"></select>
           <button onclick="window.loadStatsForPeriod()" style="
             padding: 6px 14px;
-            background: #2563eb;
+            background: #4338CA;
             color: white;
             border: none;
             border-radius: 6px;
