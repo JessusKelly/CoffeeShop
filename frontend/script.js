@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         fullName = user.login || 'Пользователь';
       }
-      
+
       const roleText = user.role === 1 ? '(Админ)' : '(Сотрудник)';
       userInfo.innerText = `${fullName} ${roleText}`;
     }
@@ -141,7 +141,7 @@ async function loadShiftsForDate(dateStr) {
     const data = await res.json();
 
     console.log(`Loaded shifts for ${dateStr}:`, data.shifts);
-    
+
     data.shifts.forEach(shift => {
       console.log('Shift:', shift.id, shift.shift_date, shift.week_day);
       drawShift(shift);
@@ -170,7 +170,7 @@ function drawShift(shift) {
   bar.style.left = left + '%';
   bar.style.width = width + '%';
   bar.innerText = `${start}:00-${end}:00`;
-  
+
   bar.dataset.shiftId = shift.id;
   bar.dataset.userAddressId = shift.user_address_id;
   bar.dataset.startTime = shift.start_time;
@@ -287,7 +287,7 @@ function showShiftActions(shift, barElement) {
       ">
         <h3 style="margin-top:0; color:#333;">Смена: ${shift.surname} ${shift.name}</h3>
         <p style="color:#555; margin:8px 0 20px;">
-          <strong>Время:</strong> ${shift.start_time.substring(0,5)} - ${shift.end_time.substring(0,5)}<br>
+          <strong>Время:</strong> ${shift.start_time.substring(0, 5)} - ${shift.end_time.substring(0, 5)}<br>
           <strong>Адрес:</strong> ${shift.address || '—'}
         </p>
         
@@ -340,14 +340,14 @@ function closeShiftActionsModal() {
 
 function editFromModal(shiftId) {
   closeShiftActionsModal();
-  
+
   const bar = document.querySelector(`.day[data-shift-id="${shiftId}"]`);
-  
+
   if (!bar) {
     console.error('Shift element not found');
     return;
   }
-  
+
   const shiftData = {
     id: parseInt(bar.dataset.shiftId),
     user_address_id: parseInt(bar.dataset.userAddressId),
@@ -355,7 +355,7 @@ function editFromModal(shiftId) {
     end_time: bar.dataset.endTime,
     week_day: parseInt(bar.dataset.weekDay)
   };
-  
+
   console.log('Editing shift from DOM:', shiftData);
   editShift(shiftData, bar);
 }
@@ -376,7 +376,7 @@ window.deleteFromModal = deleteFromModal;
 async function editShift(shift, barElement) {
   const newStart = prompt(`Новое время начала (например, 10):`, parseInt(shift.start_time.split(':')[0]));
   if (newStart === null) return;
-  
+
   const newEnd = prompt(`Новое время конца (например, 18):`, parseInt(shift.end_time.split(':')[0]));
   if (newEnd === null) return;
 
@@ -397,7 +397,7 @@ async function editShift(shift, barElement) {
       },
       body: JSON.stringify({
         user_address_id: shift.user_address_id,
-        shift_date: formatDateForAPI(currentDate), 
+        shift_date: formatDateForAPI(currentDate),
         start_time: `${startNum.toString().padStart(2, '0')}:00:00`,
         end_time: `${endNum.toString().padStart(2, '0')}:00:00`
       })
@@ -507,12 +507,12 @@ async function showStats() {
 
   const monthSelect = document.getElementById('statsMonth');
   const yearSelect = document.getElementById('statsYear');
-  
+
   const months = [
     'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
     'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
   ];
-  
+
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
@@ -635,3 +635,72 @@ window.closeStatsModal = closeStatsModal;
 document.addEventListener('DOMContentLoaded', () => {
   loadPageData();
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".worker-info").forEach(worker => {
+    const nameElement = worker.querySelector(".worker-name") || worker.querySelector("strong");
+    const avatarElement = worker.querySelector(".worker-avatar");
+
+    if (nameElement && avatarElement && !avatarElement.querySelector("img")) {
+      const nameText = nameElement.textContent.trim();
+      const words = nameText.split(/\s+/);
+
+      let initials = "";
+      if (words.length >= 2) {
+        initials = words[0][0] + words[1][0];
+      } else if (words.length === 1 && words[0].length > 0) {
+        initials = words[0].substring(0, 2);
+      }
+
+      avatarElement.textContent = initials.toUpperCase();
+    }
+  });
+
+  // --- НАДЕЖНАЯ ЛОГИКА ДРОПДАУНА ---
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsDropdown = document.getElementById('settingsDropdown');
+
+  if (settingsBtn && settingsDropdown) {
+    settingsBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      settingsDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!settingsBtn.contains(event.target) && !settingsDropdown.contains(event.target)) {
+        settingsDropdown.classList.remove('show');
+      }
+    });
+  }
+
+  // Клик на кнопку "Выйти" (синхронизировали ID с вашим HTML)
+  const logoutElement = document.getElementById('logout');
+  if (logoutElement) {
+    logoutElement.addEventListener('click', (event) => {
+      event.preventDefault();
+      logout();
+    });
+  }
+}); // Финальное закрытие обработчика DOMContentLoaded
+
+// --- КОД АВТО-АВАТАРКИ (ИСПРАВЛЕННЫЙ) ---
+const avatarSpan = document.getElementById('currentUser');
+if (avatarSpan) {
+  const observer = new MutationObserver(() => {
+    const nameText = avatarSpan.innerText.trim();
+    if (nameText.length > 2) {
+      const words = nameText.split(/\s+/);
+      if (words.length >= 2) {
+        const firstLetter = words[0].charAt(0).toUpperCase();
+        const secondLetter = words[1].charAt(0).toUpperCase();
+        avatarSpan.innerText = firstLetter + secondLetter;
+      } else if (words.length === 1 && words[0].length > 0) {
+        avatarSpan.innerText = words[0].substring(0, 2).toUpperCase();
+      }
+      observer.disconnect();
+    }
+  });
+  observer.observe(avatarSpan, { childList: true, characterData: true, subtree: true });
+}
+// ----------------------------------------
