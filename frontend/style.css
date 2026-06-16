@@ -423,9 +423,10 @@ body.login-page {
 .login-box input {
     display: block;
     width: 100%;
+    max-width: 280px;
     height: 44px;
     padding: 0 14px;
-    margin: 10px 0;
+    margin: 10px auto;
     border: 1px solid #E2E8F0;
     border-radius: 10px;
     background-color: #FFFFFF;
