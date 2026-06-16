@@ -295,7 +295,7 @@ function showShiftActions(shift, barElement) {
           <button onclick="window.editFromModal(${shift.id})" style="
             flex: 1;
             padding: 10px 16px;
-            background: #2563eb;
+            background: #4338CA;
             color: white;
             border: none;
             border-radius: 6px;
@@ -487,7 +487,7 @@ async function showStats() {
           <select id="statsYear" style="padding:6px 10px; border:1px solid #ccc; border-radius:6px; font-size:14px;"></select>
           <button onclick="window.loadStatsForPeriod()" style="
             padding: 6px 14px;
-            background: #2563eb;
+            background: #4338CA;
             color: white;
             border: none;
             border-radius: 6px;

@@ -34,7 +34,9 @@ header {
     color: #0F172A;
 }
 
-#today {
+#today,
+#stats,
+#logout {
     display: flex;
     align-items: center;
     height: 36px;
@@ -50,9 +52,16 @@ header {
     transition: all 0.2s ease;
 }
 
-#today:hover {
+#today:hover,
+#stats:hover {
     background-color: #F1F5F9;
     color: #0F172A;
+}
+
+#logout:hover {
+    background-color: #FEF2F2;
+    color: #EF4444;
+    border-color: #FECACA;
 }
 
 .profile-menu {
